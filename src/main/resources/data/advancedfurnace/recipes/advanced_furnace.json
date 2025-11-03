@@ -1,7 +1,7 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "$#$",
+    "$ $",
     "$#$",
     "&&&"
   ],
@@ -13,7 +13,7 @@
       "item": "minecraft:iron_ingot"
     },
     "#": {
-      "item": "minecraft:iron_bars"
+      "item": "minecraft:coal_block"
     }
   },
   "result": {
