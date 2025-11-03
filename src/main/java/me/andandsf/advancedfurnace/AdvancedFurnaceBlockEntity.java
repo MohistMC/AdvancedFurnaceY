@@ -28,7 +28,7 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScreenHandlerFactory, Inventory, SidedInventory {
-    private DefaultedList<ItemStack> inventory = DefaultedList.ofSize(9, ItemStack.EMPTY);
+    private DefaultedList<ItemStack> inventory = DefaultedList.ofSize(10, ItemStack.EMPTY);
     private int burnTime;
     private int fuelTime;
     private int[] cookTime = new int[4];
@@ -37,6 +37,7 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
     private static final int[] TOP_SLOTS = new int[]{1, 3, 5, 7};
     private static final int[] BOTTOM_SLOTS = new int[]{2, 4, 6, 8};
     private static final int[] SIDE_SLOTS = new int[]{0};
+    private static final int[] UPDATETOOL_SLOTS = new int[]{9};
 
     private final PropertyDelegate propertyDelegate = new PropertyDelegate() {
         @Override
@@ -198,13 +199,14 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
         if (be.isBurning()) {
             be.burnTime -= 4;
         }
-
+        ItemStack updateTool = (ItemStack)be.inventory.get(9);
+        int cookTimeAdd = updateTool.isEmpty() ? 1 : 2;
         if (!world.isClient) {
             ItemStack itemStack = (ItemStack)be.inventory.get(0);
             if (!be.isBurning() && (itemStack.isEmpty() || ((ItemStack)be.inventory.get(0)).isEmpty())) {
                 for (int i = 0; i < 4; i++) {
                     if (!be.isBurning() && be.cookTime[i] > 0) {
-                        be.cookTime[i] = MathHelper.clamp(be.cookTime[i] - 2, 0, be.cookTimeTotal[i]);
+                        be.cookTime[i] = MathHelper.clamp(be.cookTime[i] - cookTimeAdd, 0, be.cookTimeTotal[i]);
                     }
                 }
             } else {
@@ -230,7 +232,7 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
                     }
 
                     if (be.isBurning() && be.canAcceptRecipeOutput(world.getRegistryManager(), recipe, i)) {
-                        be.cookTime[i] += 2;
+                        be.cookTime[i] += cookTimeAdd;
                         be.cookTimeTotal[i] = world.getRecipeManager().getFirstMatch(RecipeType.SMELTING, tempInventory, world).map(AbstractCookingRecipe::getCookTime).orElse(200);
                         if (be.cookTime[i] == be.cookTimeTotal[i]) {
                             be.cookTime[i] = 0;

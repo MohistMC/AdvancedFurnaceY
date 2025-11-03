@@ -18,7 +18,7 @@ public class AdvancedFurnaceScreenHandler extends ScreenHandler {
     PropertyDelegate propertyDelegate;
 
     public AdvancedFurnaceScreenHandler(int syncId, PlayerInventory playerInventory) {
-        this(syncId, playerInventory, new SimpleInventory(9), new ArrayPropertyDelegate(10));
+        this(syncId, playerInventory, new SimpleInventory(10), new ArrayPropertyDelegate(10));
     }
 
     public AdvancedFurnaceScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory, PropertyDelegate propertyDelegate) {
@@ -42,7 +42,12 @@ public class AdvancedFurnaceScreenHandler extends ScreenHandler {
         });
 
         for (m=0; m < 4; ++m) {
-            this.addSlot(new Slot(inventory, 2*m+1, 46 + 27*m, 19));
+            this.addSlot(new Slot(inventory, 2*m+1, 46 + 27*m, 19){
+                @Override
+                public boolean canInsert(ItemStack stack) {
+                    return stack.getItem() != AdvancedFurnace.UPDATE_TOOL_ITEM;
+                }
+            });
             this.addSlot(new FurnaceOutputSlot(playerInventory.player, inventory, 2*m+2, 46 + 27*m, 63));
         }
 
@@ -55,6 +60,17 @@ public class AdvancedFurnaceScreenHandler extends ScreenHandler {
         for (m = 0; m < 9; ++m) {
             this.addSlot(new Slot(playerInventory, m, 8 + m * 18, 153));
         }
+
+        this.addSlot(new Slot(inventory, 9, 152, 33){
+            @Override
+            public boolean canInsert(ItemStack stack) {
+                return stack.getItem() == AdvancedFurnace.UPDATE_TOOL_ITEM;
+            }
+            @Override
+            public int getMaxItemCount(ItemStack stack) {
+                return 1;
+            }
+        });
     }
 
     @Override
