@@ -1,4 +1,4 @@
-# AdvancedFurnace
+# AdvancedFurnaceY
 minecraft mod
 
-[download](https://modrinth.com/mod/advancedfurnace/versions)
+Original project: https://github.com/andsssf/AdvancedFurnace
