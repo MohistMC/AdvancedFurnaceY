@@ -64,8 +64,9 @@ public class AdvancedFurnaceScreenHandler extends ScreenHandler {
         this.addSlot(new Slot(inventory, 9, 152, 33){
             @Override
             public boolean canInsert(ItemStack stack) {
-                return stack.getItem() == AdvancedFurnace.UPDATE_TOOL_ITEM;
+                return !isBurning() && stack.getItem() == AdvancedFurnace.UPDATE_TOOL_ITEM;
             }
+
             @Override
             public int getMaxItemCount(ItemStack stack) {
                 return 1;
