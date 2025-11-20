@@ -13,18 +13,19 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.recipe.AbstractCookingRecipe;
-import net.minecraft.recipe.Recipe;
+import net.minecraft.recipe.RecipeEntry;
 import net.minecraft.recipe.RecipeType;
+import net.minecraft.recipe.input.SingleStackRecipeInput;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScreenHandlerFactory, Inventory, SidedInventory {
@@ -192,14 +193,14 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
         return this.burnTime > 0;
     }
 
-    public static void tick(World world, BlockPos pos, BlockState state, AdvancedFurnaceBlockEntity be) {
+    public static void tick(ServerWorld world, BlockPos pos, BlockState state, AdvancedFurnaceBlockEntity be) {
         boolean bl = be.isBurning();
         boolean bl2 = false;
         if (be.isBurning()) {
             be.burnTime -= 4;
         }
 
-        if (!world.isClient) {
+        if (!world.isClient()) {
             ItemStack itemStack = (ItemStack)be.inventory.get(0);
             if (!be.isBurning() && (itemStack.isEmpty() || ((ItemStack)be.inventory.get(0)).isEmpty())) {
                 for (int i = 0; i < 4; i++) {
@@ -211,7 +212,8 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
                 for (int i = 0; i < 4; i++) {
                     Inventory tempInventory = new SimpleInventory(3);
                     tempInventory.setStack(0, be.inventory.get(1+i*2));
-                    Recipe<?> recipe = world.getRecipeManager().getFirstMatch(RecipeType.SMELTING, tempInventory, world).orElse(null);
+                    SingleStackRecipeInput singleStackRecipeInput = new SingleStackRecipeInput(itemStack);
+                    RecipeEntry<? extends AbstractCookingRecipe> recipe = world.getRecipeManager().getFirstMatch(singleStackRecipeInput, world).orElse(null);
 
                     if (!be.isBurning() && be.canAcceptRecipeOutput(world.getRegistryManager(), recipe, i)) {
                         be.burnTime = be.getFuelTime(itemStack);
@@ -253,7 +255,7 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
         }
     }
 
-    protected boolean canAcceptRecipeOutput(DynamicRegistryManager registryManager, @Nullable Recipe<?> recipe, int i) {
+    protected boolean canAcceptRecipeOutput(DynamicRegistryManager registryManager, @Nullable RecipeEntry<? extends AbstractCookingRecipe> recipe, int i) {
         if (!(this.inventory.get(1+2*i)).isEmpty() && recipe != null) {
             ItemStack itemStack = recipe.getOutput(registryManager);
             if (itemStack.isEmpty()) {
@@ -284,7 +286,7 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
         }
     }
 
-    private void craftRecipe(DynamicRegistryManager registryManager, @Nullable Recipe<?> recipe, int i) {
+    private void craftRecipe(DynamicRegistryManager registryManager, @Nullable RecipeEntry<? extends AbstractCookingRecipe> recipe, SingleStackRecipeInput input, DefaultedList<ItemStack> inventory, int maxCount) {
         if (recipe != null && this.canAcceptRecipeOutput(registryManager, recipe, i)) {
             ItemStack itemStack = this.inventory.get(1+2*i);
             ItemStack itemStack2 = recipe.getOutput(registryManager);

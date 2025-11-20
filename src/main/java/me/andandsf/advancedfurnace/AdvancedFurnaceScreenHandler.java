@@ -1,6 +1,5 @@
 package me.andandsf.advancedfurnace;
 
-import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;

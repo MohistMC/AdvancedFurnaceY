@@ -11,6 +11,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroups;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.resource.featuretoggle.FeatureFlags;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
@@ -34,13 +35,13 @@ public class AdvancedFurnace implements ModInitializer {
 
 
 	static {
-		ADVANCED_FURNACE_BLOCK = Registry.register(Registries.BLOCK, ADVANCED_FURNACE_ID, new AdvancedFurnaceBlock(FabricBlockSettings.copyOf(Blocks.FURNACE).requiresTool()));
+		ADVANCED_FURNACE_BLOCK = Registry.register(Registries.BLOCK, ADVANCED_FURNACE_ID, new AdvancedFurnaceBlock(Block.Settings.copy(Blocks.FURNACE).requiresTool()));
 		ADVANCED_FURNACE_ITEM = Registry.register(Registries.ITEM, ADVANCED_FURNACE_ID, new BlockItem(ADVANCED_FURNACE_BLOCK, new Item.Settings()));
 		Registry.register(Registries.ITEM, Identifier.tryParse(MOD_ID, "update_tool"), UPDATE_TOOL_ITEM);
 
 		ADVANCED_FURNACE_BLOCK_ENTITY = Registry.register(Registries.BLOCK_ENTITY_TYPE, ADVANCED_FURNACE_ID, FabricBlockEntityTypeBuilder.create(AdvancedFurnaceBlockEntity::new, ADVANCED_FURNACE_BLOCK).build(null));
 
-		ADVANCED_FURNACE_SCREEN_HANDLER = ScreenHandlerRegistry.registerSimple(ADVANCED_FURNACE_ID, AdvancedFurnaceScreenHandler::new);
+		ADVANCED_FURNACE_SCREEN_HANDLER = Registry.register(Registries.SCREEN_HANDLER, ADVANCED_FURNACE_ID,  new ScreenHandlerType<>(AdvancedFurnaceScreenHandler::new, FeatureFlags.VANILLA_FEATURES));
 	}
 
 	@Override
