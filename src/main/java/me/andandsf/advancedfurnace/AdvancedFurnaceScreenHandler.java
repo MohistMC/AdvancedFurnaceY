@@ -33,7 +33,7 @@ public class AdvancedFurnaceScreenHandler extends ScreenHandler {
         this.addSlot(new Slot(inventory, 0, 12, 33){
             @Override
             public boolean canInsert(ItemStack stack) {
-                return AbstractFurnaceBlockEntity.canUseAsFuel(stack) || stack.getItem() == Items.BUCKET;
+                return playerInventory.player.getEntityWorld().getFuelRegistry().isFuel(stack) || stack.getItem() == Items.BUCKET;
             }
             @Override
             public int getMaxItemCount(ItemStack stack) {

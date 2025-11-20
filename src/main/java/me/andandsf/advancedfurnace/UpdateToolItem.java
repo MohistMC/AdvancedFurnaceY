@@ -16,7 +16,7 @@ public class UpdateToolItem extends Item {
     @Override
     public ActionResult useOnBlock(ItemUsageContext context) {
         World world = context.getWorld();
-        if (world.isClient) return ActionResult.PASS;
+        if (world.isClient()) return ActionResult.PASS;
         BlockPos pos = context.getBlockPos();
         if (world.getBlockState(pos).getBlock() instanceof FurnaceBlock) {
             Direction direction = world.getBlockState(pos).get(FurnaceBlock.FACING);
