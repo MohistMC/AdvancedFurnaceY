@@ -1,35 +1,26 @@
 package me.andandsf.advancedfurnace;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventories;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SidedInventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.recipe.AbstractCookingRecipe;
-import net.minecraft.recipe.RecipeEntry;
-import net.minecraft.recipe.RecipeType;
-import net.minecraft.recipe.input.SingleStackRecipeInput;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.WorldlyContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
-public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScreenHandlerFactory, Inventory, SidedInventory {
-    private DefaultedList<ItemStack> inventory = DefaultedList.ofSize(9, ItemStack.EMPTY);
+public class AdvancedFurnaceBlockEntity extends BlockEntity implements MenuProvider, Container, WorldlyContainer {
+    private NonNullList<ItemStack> inventory = NonNullList.withSize(9, ItemStack.EMPTY);
     private int burnTime;
     private int fuelTime;
     private int[] cookTime = new int[4];
@@ -39,7 +30,7 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
     private static final int[] BOTTOM_SLOTS = new int[]{2, 4, 6, 8};
     private static final int[] SIDE_SLOTS = new int[]{0};
 
-    private final PropertyDelegate propertyDelegate = new PropertyDelegate() {
+    private final ContainerData propertyDelegate = new ContainerData() {
         @Override
         public int get(int index) {
             switch (index) {
@@ -96,7 +87,7 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
 
         //this is supposed to return the amount of integers you have in your delegate, in our example only one
         @Override
-        public int size() {
+        public int getCount() {
             return 10;
         }
     };
@@ -122,45 +113,45 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
     }
 
     @Override
-    public ItemStack getStack(int slot) {
+    public ItemStack getItem(int slot) {
         return inventory.get(slot);
     }
 
     @Override
-    public ItemStack removeStack(int slot, int amount) {
-        ItemStack result = Inventories.splitStack(inventory, slot, amount);
+    public ItemStack removeItem(int slot, int amount) {
+        ItemStack result = ContainerHelper.removeItem(inventory, slot, amount);
         if (!result.isEmpty()) {
-            markDirty();
+            setChanged();
         }
         return result;
     }
 
     @Override
-    public ItemStack removeStack(int slot) {
-        return Inventories.removeStack(inventory, slot);
+    public ItemStack removeItemNoUpdate(int slot) {
+        return ContainerHelper.takeItem(inventory, slot);
     }
 
     @Override
-    public void setStack(int slot, ItemStack stack) {
+    public void setItem(int slot, ItemStack stack) {
         inventory.set(slot, stack);
-        if (stack.getCount() > getMaxCountPerStack()) {
-            stack.setCount(getMaxCountPerStack());
+        if (stack.getCount() > getMaxStackSize()) {
+            stack.setCount(getMaxStackSize());
         }
     }
 
     @Override
-    public boolean canPlayerUse(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return true;
     }
 
     @Override
-    public Text getDisplayName() {
-        return Text.translatable("block.advancedfurnace.advanced_furnace");
+    public Component getDisplayName() {
+        return Component.translatable("block.advancedfurnace.advanced_furnace");
     }
 
     @Nullable
     @Override
-    public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
+    public AbstractContainerMenu createMenu(int syncId, Inventory inv, Player player) {
         return new AdvancedFurnaceScreenHandler(syncId, inv, this, propertyDelegate);
     }
 
@@ -301,7 +292,7 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
     }
 
     @Override
-    public int[] getAvailableSlots(Direction side) {
+    public int[] getSlotsForFace(Direction side) {
         if (side == Direction.DOWN) {
             return BOTTOM_SLOTS;
         } else {
@@ -310,12 +301,12 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
     }
 
     @Override
-    public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
+    public boolean canPlaceItemThroughFace(int slot, ItemStack stack, @Nullable Direction dir) {
         return true;
     }
 
     @Override
-    public boolean canExtract(int slot, ItemStack stack, Direction dir) {
+    public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction dir) {
         return true;
     }
 }

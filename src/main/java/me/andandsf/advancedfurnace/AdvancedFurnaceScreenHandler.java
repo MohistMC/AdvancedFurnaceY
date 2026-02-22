@@ -1,48 +1,49 @@
 package me.andandsf.advancedfurnace;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.FurnaceOutputSlot;
-import net.minecraft.screen.slot.Slot;
 
-public class AdvancedFurnaceScreenHandler extends ScreenHandler {
-    private final Inventory inventory;
-    PropertyDelegate propertyDelegate;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.FurnaceResultSlot;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
-    public AdvancedFurnaceScreenHandler(int syncId, PlayerInventory playerInventory) {
-        this(syncId, playerInventory, new SimpleInventory(9), new ArrayPropertyDelegate(10));
+public class AdvancedFurnaceScreenHandler extends AbstractContainerMenu {
+    private final Container inventory;
+    ContainerData propertyDelegate;
+
+    public AdvancedFurnaceScreenHandler(int syncId, Inventory playerInventory) {
+        this(syncId, playerInventory, new SimpleContainer(9), new SimpleContainerData(10));
     }
 
-    public AdvancedFurnaceScreenHandler(int syncId, PlayerInventory playerInventory, Inventory inventory, PropertyDelegate propertyDelegate) {
+    public AdvancedFurnaceScreenHandler(int syncId, Inventory playerInventory, Container inventory, ContainerData propertyDelegate) {
         super(AdvancedFurnace.ADVANCED_FURNACE_SCREEN_HANDLER, syncId);
-        checkSize(inventory, 9);
+        checkContainerSize(inventory, 9);
         this.inventory = inventory;
         this.propertyDelegate = propertyDelegate;
-        inventory.onOpen(playerInventory.player);
-        this.addProperties(propertyDelegate);
+        inventory.startOpen(playerInventory.player);
+        this.addDataSlots(propertyDelegate);
         int m,l;
 
         this.addSlot(new Slot(inventory, 0, 12, 33){
             @Override
-            public boolean canInsert(ItemStack stack) {
-                return playerInventory.player.getEntityWorld().getFuelRegistry().isFuel(stack) || stack.getItem() == Items.BUCKET;
+            public boolean mayPlace(ItemStack stack) {
+                return playerInventory.player.level().fuelValues().isFuel(stack) || stack.getItem() == Items.BUCKET;
             }
             @Override
-            public int getMaxItemCount(ItemStack stack) {
-                return stack.getItem() == Items.BUCKET ? 1 : super.getMaxItemCount(stack);
+            public int getMaxStackSize(ItemStack stack) {
+                return stack.getItem() == Items.BUCKET ? 1 : super.getMaxStackSize(stack);
             }
         });
 
         for (m=0; m < 4; ++m) {
             this.addSlot(new Slot(inventory, 2*m+1, 46 + 27*m, 19));
-            this.addSlot(new FurnaceOutputSlot(playerInventory.player, inventory, 2*m+2, 46 + 27*m, 63));
+            this.addSlot(new FurnaceResultSlot(playerInventory.player, inventory, 2*m+2, 46 + 27*m, 63));
         }
 
         for (m = 0; m < 3; ++m) {
@@ -57,29 +58,29 @@ public class AdvancedFurnaceScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
-        return this.inventory.canPlayerUse(player);
+    public boolean stillValid(Player player) {
+        return this.inventory.stillValid(player);
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int invSlot) {
+    public ItemStack quickMoveStack(Player player, int invSlot) {
         ItemStack newStack = ItemStack.EMPTY;
         Slot slot = this.slots.get(invSlot);
-        if (slot != null && slot.hasStack()) {
-            ItemStack originalStack = slot.getStack();
+        if (slot != null && slot.hasItem()) {
+            ItemStack originalStack = slot.getItem();
             newStack = originalStack.copy();
-            if (invSlot < this.inventory.size()) {
-                if (!this.insertItem(originalStack, this.inventory.size(), this.slots.size(), true)) {
+            if (invSlot < this.inventory.getContainerSize()) {
+                if (!this.moveItemStackTo(originalStack, this.inventory.getContainerSize(), this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!this.insertItem(originalStack, 0, this.inventory.size(), false)) {
+            } else if (!this.moveItemStackTo(originalStack, 0, this.inventory.getContainerSize(), false)) {
                 return ItemStack.EMPTY;
             }
 
             if (originalStack.isEmpty()) {
-                slot.setStack(ItemStack.EMPTY);
+                slot.set(ItemStack.EMPTY);
             } else {
-                slot.markDirty();
+                slot.setChanged();
             }
         }
 

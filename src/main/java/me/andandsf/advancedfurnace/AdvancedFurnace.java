@@ -3,17 +3,18 @@ package me.andandsf.advancedfurnace;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroups;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.resource.featuretoggle.FeatureFlags;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,30 +26,30 @@ public class AdvancedFurnace implements ModInitializer {
 	public static final Block ADVANCED_FURNACE_BLOCK;
 
 	public static final BlockItem ADVANCED_FURNACE_ITEM;
-	public static final Item UPDATE_TOOL_ITEM = new UpdateToolItem(new Item.Settings());
+	public static final Item UPDATE_TOOL_ITEM = new UpdateToolItem(new Item.Properties());
 
 	public static final BlockEntityType<AdvancedFurnaceBlockEntity> ADVANCED_FURNACE_BLOCK_ENTITY;
 
-	public static final ScreenHandlerType<AdvancedFurnaceScreenHandler> ADVANCED_FURNACE_SCREEN_HANDLER;
+	public static final MenuType<AdvancedFurnaceScreenHandler> ADVANCED_FURNACE_SCREEN_HANDLER;
 
-	public static final Identifier ADVANCED_FURNACE_ID = Identifier.tryParse(MOD_ID, "advanced_furnace");
+	public static final Identifier ADVANCED_FURNACE_ID = Identifier.fromNamespaceAndPath(MOD_ID, "advanced_furnace");
 
 
 	static {
-		ADVANCED_FURNACE_BLOCK = Registry.register(Registries.BLOCK, ADVANCED_FURNACE_ID, new AdvancedFurnaceBlock(Block.Settings.copy(Blocks.FURNACE).requiresTool()));
-		ADVANCED_FURNACE_ITEM = Registry.register(Registries.ITEM, ADVANCED_FURNACE_ID, new BlockItem(ADVANCED_FURNACE_BLOCK, new Item.Settings()));
-		Registry.register(Registries.ITEM, Identifier.tryParse(MOD_ID, "update_tool"), UPDATE_TOOL_ITEM);
+		ADVANCED_FURNACE_BLOCK = Registry.register(Registries.BLOCK, ADVANCED_FURNACE_ID, new AdvancedFurnaceBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.FURNACE).requiresCorrectToolForDrops()));
+		ADVANCED_FURNACE_ITEM = Registry.register(Registries.ITEM, ADVANCED_FURNACE_ID, new BlockItem(ADVANCED_FURNACE_BLOCK, new Item.Properties()));
+		Registry.register(Registries.ITEM, Identifier.fromNamespaceAndPath(MOD_ID, "update_tool"), UPDATE_TOOL_ITEM);
 
 		ADVANCED_FURNACE_BLOCK_ENTITY = Registry.register(Registries.BLOCK_ENTITY_TYPE, ADVANCED_FURNACE_ID, FabricBlockEntityTypeBuilder.create(AdvancedFurnaceBlockEntity::new, ADVANCED_FURNACE_BLOCK).build(null));
 
-		ADVANCED_FURNACE_SCREEN_HANDLER = Registry.register(Registries.SCREEN_HANDLER, ADVANCED_FURNACE_ID,  new ScreenHandlerType<>(AdvancedFurnaceScreenHandler::new, FeatureFlags.VANILLA_FEATURES));
+		ADVANCED_FURNACE_SCREEN_HANDLER = Registry.register(Registries.MENU, ADVANCED_FURNACE_ID,  new MenuType<>(AdvancedFurnaceScreenHandler::new, FeatureFlags.VANILLA_SET));
 	}
 
 	@Override
 	public void onInitialize() {
-        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(content -> {
-            content.add(ADVANCED_FURNACE_ITEM);
-            content.add(UPDATE_TOOL_ITEM);
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(content -> {
+            content.accept(ADVANCED_FURNACE_ITEM);
+            content.accept(UPDATE_TOOL_ITEM);
         });
 	}
 }
