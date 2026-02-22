@@ -7,7 +7,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.FurnaceResultSlot;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -30,7 +29,6 @@ public class AdvancedFurnaceScreenHandler extends AbstractContainerMenu {
         this.addDataSlots(propertyDelegate);
         int m,l;
 
-        // 燃料槽位
         this.addSlot(new Slot(inventory, 0, 12, 33){
             @Override
             public boolean mayPlace(ItemStack stack) {
@@ -42,24 +40,19 @@ public class AdvancedFurnaceScreenHandler extends AbstractContainerMenu {
             }
         });
 
-        // 4个输入/输出槽位对
         for (int i = 0; i < 4; i++) {
-            int inputSlot = 1 + i * 2;  // 输入槽位: 1, 3, 5, 7
-            int outputSlot = 2 + i * 2; // 输出槽位: 2, 4, 6, 8
+            int inputSlot = 1 + i * 2;
+            int outputSlot = 2 + i * 2;
 
-            // 输入槽位
             this.addSlot(new Slot(inventory, inputSlot, 46 + 27 * i, 19));
-            // 输出槽位
-            this.addSlot(new FurnaceResultSlot(playerInventory.player, inventory, outputSlot, 46 + 27 * i, 63));
+            this.addSlot(new AdvancedFurnaceResultSlot(playerInventory.player, inventory, outputSlot, 46 + 27 * i, 63));
         }
 
-        // 玩家物品栏
         for (m = 0; m < 3; ++m) {
             for (l = 0; l < 9; ++l) {
                 this.addSlot(new Slot(playerInventory, l + m * 9 + 9, 8 + l * 18, 95 + m * 18));
             }
         }
-        // 玩家快捷栏
         for (m = 0; m < 9; ++m) {
             this.addSlot(new Slot(playerInventory, m, 8 + m * 18, 153));
         }
@@ -122,12 +115,10 @@ public class AdvancedFurnaceScreenHandler extends AbstractContainerMenu {
     }
 
     private int getCookTime(int index) {
-        // 每个槽位的烹饪时间数据索引: 2, 4, 6, 8
         return propertyDelegate.get(2 + index * 2);
     }
 
     private int getCookTimeTotal(int index) {
-        // 每个槽位的总烹饪时间数据索引: 3, 5, 7, 9
         return propertyDelegate.get(3 + index * 2);
     }
 }

@@ -32,7 +32,6 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -44,7 +43,6 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBlockEntity implements WorldlyContainer, RecipeCraftingHolder, StackedContentsCompatible {
-    // 修改槽位定义以支持4个输入槽位
     protected static final int SLOT_FUEL = 0;
     protected static final int SLOT_INPUT_1 = 1;
     protected static final int SLOT_RESULT_1 = 2;
@@ -58,7 +56,6 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
     public static final int DATA_LIT_TIME = 0;
     public static final int DATA_LIT_DURATION = 1;
 
-    // 为每个槽位定义数据索引
     private static final int[] DATA_COOKING_PROGRESS = {2, 4, 6, 8};
     private static final int[] DATA_COOKING_TOTAL_TIME = {3, 5, 7, 9};
 
@@ -80,7 +77,6 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
     int litTimeRemaining;
     int litTotalTime;
 
-    // 为每个槽位维护独立的计时器
     int[] cookingTimers = new int[4];
     int[] cookingTotalTimes = new int[4];
 
@@ -154,7 +150,6 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
         this.recipesUsed = new Reference2IntOpenHashMap();
         this.quickCheck = RecipeManager.createCheck(recipeType);
 
-        // 初始化所有计时器
         for (int i = 0; i < 4; i++) {
             this.cookingTimers[i] = DEFAULT_COOKING_TIMER;
             this.cookingTotalTimes[i] = DEFAULT_COOKING_TOTAL_TIME;
@@ -188,7 +183,6 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
         valueOutput.putShort("lit_time_remaining", (short)this.litTimeRemaining);
         valueOutput.putShort("lit_total_time", (short)this.litTotalTime);
 
-        // 保存所有槽位的计时器数据
         for (int i = 0; i < 4; i++) {
             valueOutput.putShort("cooking_time_spent_" + i, (short)this.cookingTimers[i]);
             valueOutput.putShort("cooking_total_time_" + i, (short)this.cookingTotalTimes[i]);
@@ -209,7 +203,6 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
         ItemStack fuelStack = advancedFurnaceBlockEntity.items.get(SLOT_FUEL);
         boolean hasFuel = !fuelStack.isEmpty();
 
-        // 检查是否有任何槽位在工作
         boolean anyWorking = false;
         for (int slotIndex = 0; slotIndex < 4; slotIndex++) {
             int inputSlot = getInputSlot(slotIndex);
@@ -225,7 +218,6 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
 
                 int maxStackSize = advancedFurnaceBlockEntity.getMaxStackSize();
 
-                // 检查是否可以点燃
                 if (!advancedFurnaceBlockEntity.isLit() && canBurn(serverLevel.registryAccess(), recipeHolder, singleRecipeInput, advancedFurnaceBlockEntity.items, maxStackSize, slotIndex)) {
                     advancedFurnaceBlockEntity.litTimeRemaining = advancedFurnaceBlockEntity.getBurnDuration(serverLevel.fuelValues(), fuelStack);
                     advancedFurnaceBlockEntity.litTotalTime = advancedFurnaceBlockEntity.litTimeRemaining;
@@ -242,7 +234,6 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
                     }
                 }
 
-                // 处理烧制过程
                 if (advancedFurnaceBlockEntity.isLit() && canBurn(serverLevel.registryAccess(), recipeHolder, singleRecipeInput, advancedFurnaceBlockEntity.items, maxStackSize, slotIndex)) {
                     advancedFurnaceBlockEntity.cookingTimers[slotIndex]++;
                     anyWorking = true;
@@ -263,7 +254,6 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
             }
         }
 
-        // 如果没有在工作但有进度，则逐渐减少进度
         if (!advancedFurnaceBlockEntity.isLit() && !anyWorking) {
             for (int i = 0; i < 4; i++) {
                 if (advancedFurnaceBlockEntity.cookingTimers[i] > 0) {
@@ -279,7 +269,7 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
 
         if (wasLit != advancedFurnaceBlockEntity.isLit()) {
             stateChanged = true;
-            blockState = blockState.setValue(AbstractFurnaceBlock.LIT, advancedFurnaceBlockEntity.isLit());
+            blockState = blockState.setValue(AbstractAdvancedFurnaceBlock.LIT, advancedFurnaceBlockEntity.isLit());
             serverLevel.setBlock(blockPos, blockState, 3);
         }
 
@@ -288,7 +278,6 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
         }
     }
 
-    // 辅助方法获取槽位索引
     private static int getInputSlot(int index) {
         return switch (index) {
             case 0 -> SLOT_INPUT_1;
@@ -411,7 +400,6 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
         this.items.set(slot, itemStack);
         itemStack.limitSize(this.getMaxStackSize(itemStack));
 
-        // 如果是输入槽位且物品改变，重置烹饪时间
         if (isInputSlot(slot) && !sameItem) {
             Level level = this.level;
             if (level instanceof ServerLevel serverLevel) {
@@ -440,17 +428,14 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
     }
 
     public boolean canPlaceItem(int slot, ItemStack itemStack) {
-        // 结果槽位不能放入物品
         if (slot == SLOT_RESULT_1 || slot == SLOT_RESULT_2 || slot == SLOT_RESULT_3 || slot == SLOT_RESULT_4) {
             return false;
         }
-        // 燃料槽位只能放入燃料或桶
         else if (slot == SLOT_FUEL) {
             ItemStack fuelStack = this.items.get(SLOT_FUEL);
             return this.level.fuelValues().isFuel(itemStack) ||
                     (itemStack.is(Items.BUCKET) && !fuelStack.is(Items.BUCKET));
         }
-        // 输入槽位可以放入任何可烧制的物品
         else {
             return true;
         }
