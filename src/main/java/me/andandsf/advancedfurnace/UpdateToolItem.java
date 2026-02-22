@@ -22,7 +22,7 @@ public class UpdateToolItem extends Item {
         if (world.getBlockState(pos).getBlock() instanceof FurnaceBlock) {
             Direction direction = world.getBlockState(pos).getValue(FurnaceBlock.FACING);
             world.removeBlock(pos, false);
-            world.setBlock(pos, AdvancedFurnace.ADVANCED_FURNACE_BLOCK.defaultBlockState().with(AdvancedFurnaceBlock.FACING, direction));
+            world.setBlockAndUpdate(pos, AdvancedFurnace.ADVANCED_FURNACE_BLOCK.defaultBlockState().setValue(AbstractAdvancedFurnaceBlock.FACING, direction));
             context.getItemInHand().shrink(1);
             return InteractionResult.SUCCESS;
         }

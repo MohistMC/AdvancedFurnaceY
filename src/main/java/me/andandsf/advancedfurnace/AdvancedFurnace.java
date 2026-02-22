@@ -1,16 +1,19 @@
 package me.andandsf.advancedfurnace;
 
+import java.util.function.Function;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -25,8 +28,8 @@ public class AdvancedFurnace implements ModInitializer {
 
 	public static final Block ADVANCED_FURNACE_BLOCK;
 
-	public static final BlockItem ADVANCED_FURNACE_ITEM;
-	public static final Item UPDATE_TOOL_ITEM = new UpdateToolItem(new Item.Properties());
+	public static final Item ADVANCED_FURNACE_ITEM;
+	public static final Item UPDATE_TOOL_ITEM;
 
 	public static final BlockEntityType<AdvancedFurnaceBlockEntity> ADVANCED_FURNACE_BLOCK_ENTITY;
 
@@ -36,13 +39,24 @@ public class AdvancedFurnace implements ModInitializer {
 
 
 	static {
-		ADVANCED_FURNACE_BLOCK = Registry.register(Registries.BLOCK, ADVANCED_FURNACE_ID, new AdvancedFurnaceBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.FURNACE).requiresCorrectToolForDrops()));
-		ADVANCED_FURNACE_ITEM = Registry.register(Registries.ITEM, ADVANCED_FURNACE_ID, new BlockItem(ADVANCED_FURNACE_BLOCK, new Item.Properties()));
-		Registry.register(Registries.ITEM, Identifier.fromNamespaceAndPath(MOD_ID, "update_tool"), UPDATE_TOOL_ITEM);
+		ADVANCED_FURNACE_BLOCK = register("advanced_furnace", AdvancedFurnaceBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.FURNACE).requiresCorrectToolForDrops());
+		ADVANCED_FURNACE_ITEM = Items.registerBlock(ADVANCED_FURNACE_BLOCK);
+		UPDATE_TOOL_ITEM = register("update_tool", UpdateToolItem::new, new Item.Properties());
+		ADVANCED_FURNACE_BLOCK_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, ADVANCED_FURNACE_ID, FabricBlockEntityTypeBuilder.create(AdvancedFurnaceBlockEntity::new, ADVANCED_FURNACE_BLOCK).build());
 
-		ADVANCED_FURNACE_BLOCK_ENTITY = Registry.register(Registries.BLOCK_ENTITY_TYPE, ADVANCED_FURNACE_ID, FabricBlockEntityTypeBuilder.create(AdvancedFurnaceBlockEntity::new, ADVANCED_FURNACE_BLOCK).build(null));
+		ADVANCED_FURNACE_SCREEN_HANDLER = Registry.register(BuiltInRegistries.MENU, ADVANCED_FURNACE_ID,  new MenuType<>(AdvancedFurnaceScreenHandler::new, FeatureFlags.VANILLA_SET));
+	}
 
-		ADVANCED_FURNACE_SCREEN_HANDLER = Registry.register(Registries.MENU, ADVANCED_FURNACE_ID,  new MenuType<>(AdvancedFurnaceScreenHandler::new, FeatureFlags.VANILLA_SET));
+	private static Block register(String path, Function<BlockBehaviour.Properties, Block> factory, BlockBehaviour.Properties settings) {
+		final Identifier identifier = Identifier.fromNamespaceAndPath(MOD_ID, path);
+		final ResourceKey<Block> registryKey = ResourceKey.create(Registries.BLOCK, identifier);
+
+        return Blocks.register(registryKey, factory, settings);
+	}
+
+	public static Item register(String path, Function<Item.Properties, Item> factory, Item.Properties settings) {
+		final ResourceKey<Item> registryKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(MOD_ID, path));
+		return Items.registerItem(registryKey, factory, settings);
 	}
 
 	@Override

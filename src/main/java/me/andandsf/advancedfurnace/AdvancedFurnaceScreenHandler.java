@@ -30,6 +30,7 @@ public class AdvancedFurnaceScreenHandler extends AbstractContainerMenu {
         this.addDataSlots(propertyDelegate);
         int m,l;
 
+        // 燃料槽位
         this.addSlot(new Slot(inventory, 0, 12, 33){
             @Override
             public boolean mayPlace(ItemStack stack) {
@@ -41,17 +42,24 @@ public class AdvancedFurnaceScreenHandler extends AbstractContainerMenu {
             }
         });
 
-        for (m=0; m < 4; ++m) {
-            this.addSlot(new Slot(inventory, 2*m+1, 46 + 27*m, 19));
-            this.addSlot(new FurnaceResultSlot(playerInventory.player, inventory, 2*m+2, 46 + 27*m, 63));
+        // 4个输入/输出槽位对
+        for (int i = 0; i < 4; i++) {
+            int inputSlot = 1 + i * 2;  // 输入槽位: 1, 3, 5, 7
+            int outputSlot = 2 + i * 2; // 输出槽位: 2, 4, 6, 8
+
+            // 输入槽位
+            this.addSlot(new Slot(inventory, inputSlot, 46 + 27 * i, 19));
+            // 输出槽位
+            this.addSlot(new FurnaceResultSlot(playerInventory.player, inventory, outputSlot, 46 + 27 * i, 63));
         }
 
+        // 玩家物品栏
         for (m = 0; m < 3; ++m) {
             for (l = 0; l < 9; ++l) {
                 this.addSlot(new Slot(playerInventory, l + m * 9 + 9, 8 + l * 18, 95 + m * 18));
             }
         }
-        //The player Hotbar
+        // 玩家快捷栏
         for (m = 0; m < 9; ++m) {
             this.addSlot(new Slot(playerInventory, m, 8 + m * 18, 153));
         }
@@ -92,18 +100,17 @@ public class AdvancedFurnaceScreenHandler extends AbstractContainerMenu {
     }
 
     public int getFuelProgress() {
-        int i = getFuelTime();
-        if (i == 0) {
-            i = 200;
+        int fuelTime = getFuelTime();
+        if (fuelTime == 0) {
+            fuelTime = 200;
         }
-
-        return getBurnTime() * 13 / i;
+        return getBurnTime() * 13 / fuelTime;
     }
 
     public int getCookProgress(int index) {
-        int i = getCookTime(index);
-        int j = getCookTimeTotal(index);
-        return j != 0 && i != 0 ? i * 24 / j : 0;
+        int cookTime = getCookTime(index);
+        int cookTimeTotal = getCookTimeTotal(index);
+        return cookTimeTotal != 0 && cookTime != 0 ? cookTime * 24 / cookTimeTotal : 0;
     }
 
     private int getBurnTime() {
@@ -114,11 +121,14 @@ public class AdvancedFurnaceScreenHandler extends AbstractContainerMenu {
         return propertyDelegate.get(1);
     }
 
-    private int getCookTime(int i) {
-        return propertyDelegate.get(2 + i * 2);
+    private int getCookTime(int index) {
+        // 每个槽位的烹饪时间数据索引: 2, 4, 6, 8
+        return propertyDelegate.get(2 + index * 2);
     }
 
-    private int getCookTimeTotal(int i) {
-        return propertyDelegate.get(3 + i * 2);
+    private int getCookTimeTotal(int index) {
+        // 每个槽位的总烹饪时间数据索引: 3, 5, 7, 9
+        return propertyDelegate.get(3 + index * 2);
     }
 }
+
