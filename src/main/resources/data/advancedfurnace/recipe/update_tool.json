@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "aba",
+    "bcb",
+    "ddd"
+  ],
+  "key": {
+    "a": "minecraft:iron_bars",
+    "b": "minecraft:furnace",
+    "c": "#minecraft:logs",
+    "d": "minecraft:iron_ingot"
+  },
+  "result": {
+    "id": "advancedfurnace:update_tool",
+    "count": 1
+  }
+}
