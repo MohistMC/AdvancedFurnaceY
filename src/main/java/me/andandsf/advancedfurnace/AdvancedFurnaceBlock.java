@@ -65,6 +65,6 @@ public class AdvancedFurnaceBlock extends AbstractAdvancedFurnaceBlock {
 
     @Override
     public <T extends BlockEntity> @org.jspecify.annotations.Nullable BlockEntityTicker<T> getTicker(Level p_153273_, BlockState p_153274_, BlockEntityType<T> p_153275_) {
-        return createFurnaceTicker(p_153273_, p_153275_, AdvancedFurnace.ADVANCED_FURNACE_BLOCK_ENTITY);
+        return createFurnaceTicker(p_153273_, p_153275_, AdvancedFurnace.ADVANCED_FURNACE_BLOCK_ENTITY.get());
     }
 }

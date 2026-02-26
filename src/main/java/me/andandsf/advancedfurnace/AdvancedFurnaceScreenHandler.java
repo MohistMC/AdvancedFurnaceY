@@ -21,7 +21,7 @@ public class AdvancedFurnaceScreenHandler extends AbstractContainerMenu {
     }
 
     public AdvancedFurnaceScreenHandler(int syncId, Inventory playerInventory, Container inventory, ContainerData propertyDelegate) {
-        super(AdvancedFurnace.ADVANCED_FURNACE_SCREEN_HANDLER, syncId);
+        super(AdvancedFurnace.ADVANCED_FURNACE_SCREEN_HANDLER.get(), syncId);
         checkContainerSize(inventory, 9);
         this.inventory = inventory;
         this.propertyDelegate = propertyDelegate;
