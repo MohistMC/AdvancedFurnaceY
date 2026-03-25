@@ -24,6 +24,7 @@ import net.minecraft.world.inventory.RecipeCraftingHolder;
 import net.minecraft.world.inventory.StackedContentsCompatible;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.Recipe;
@@ -83,7 +84,7 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
     protected final ContainerData dataAccess;
     private final Reference2IntOpenHashMap<ResourceKey<Recipe<?>>> recipesUsed;
     private final RecipeManager.CachedCheck<SingleRecipeInput, ? extends AbstractCookingRecipe> quickCheck;
-
+    private final RecipeType<? extends AbstractCookingRecipe> recipeType;
 
     public AbstractAdvancedFurnaceBlockEntity(BlockEntityType<?> blockEntityType, BlockPos blockPos, BlockState blockState, RecipeType<? extends AbstractCookingRecipe> recipeType) {
         super(blockEntityType, blockPos, blockState);
@@ -149,7 +150,7 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
         };
         this.recipesUsed = new Reference2IntOpenHashMap();
         this.quickCheck = RecipeManager.createCheck(recipeType);
-
+        this.recipeType = recipeType;
         for (int i = 0; i < 4; i++) {
             this.cookingTimers[i] = DEFAULT_COOKING_TIMER;
             this.cookingTotalTimes[i] = DEFAULT_COOKING_TOTAL_TIME;
@@ -218,7 +219,7 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
 
                 int maxStackSize = advancedFurnaceBlockEntity.getMaxStackSize();
 
-                if (!advancedFurnaceBlockEntity.isLit() && canBurn(serverLevel.registryAccess(), recipeHolder, singleRecipeInput, advancedFurnaceBlockEntity.items, maxStackSize, slotIndex)) {
+                if (!advancedFurnaceBlockEntity.isLit() && canBurn(recipeHolder, singleRecipeInput, advancedFurnaceBlockEntity.items, maxStackSize, slotIndex)) {
                     advancedFurnaceBlockEntity.litTimeRemaining = advancedFurnaceBlockEntity.getBurnDuration(serverLevel.fuelValues(), fuelStack);
                     advancedFurnaceBlockEntity.litTotalTime = advancedFurnaceBlockEntity.litTimeRemaining;
 
@@ -228,13 +229,14 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
                             Item item = fuelStack.getItem();
                             fuelStack.shrink(1);
                             if (fuelStack.isEmpty()) {
-                                advancedFurnaceBlockEntity.items.set(SLOT_FUEL, item.getCraftingRemainder());
+                                ItemStackTemplate remainder = item.getCraftingRemainder();
+                                advancedFurnaceBlockEntity.items.set(SLOT_FUEL, remainder != null ? remainder.create() : ItemStack.EMPTY);
                             }
                         }
                     }
                 }
 
-                if (advancedFurnaceBlockEntity.isLit() && canBurn(serverLevel.registryAccess(), recipeHolder, singleRecipeInput, advancedFurnaceBlockEntity.items, maxStackSize, slotIndex)) {
+                if (advancedFurnaceBlockEntity.isLit() && canBurn(recipeHolder, singleRecipeInput, advancedFurnaceBlockEntity.items, maxStackSize, slotIndex)) {
                     advancedFurnaceBlockEntity.cookingTimers[slotIndex]++;
                     anyWorking = true;
 
@@ -242,7 +244,7 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
                         advancedFurnaceBlockEntity.cookingTimers[slotIndex] = 0;
                         advancedFurnaceBlockEntity.cookingTotalTimes[slotIndex] = getTotalCookTime(serverLevel, advancedFurnaceBlockEntity, slotIndex);
 
-                        if (burn(serverLevel.registryAccess(), recipeHolder, singleRecipeInput, advancedFurnaceBlockEntity.items, maxStackSize, slotIndex)) {
+                        if (burn(recipeHolder, singleRecipeInput, advancedFurnaceBlockEntity.items, maxStackSize, slotIndex)) {
                             advancedFurnaceBlockEntity.setRecipeUsed(recipeHolder);
                         }
 
@@ -298,7 +300,7 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
         };
     }
 
-    private static boolean canBurn(RegistryAccess registryAccess, @Nullable RecipeHolder<? extends AbstractCookingRecipe> recipeHolder, SingleRecipeInput singleRecipeInput, NonNullList<ItemStack> items, int maxStackSize, int slotIndex) {
+    private static boolean canBurn(@Nullable RecipeHolder<? extends AbstractCookingRecipe> recipeHolder, SingleRecipeInput singleRecipeInput, NonNullList<ItemStack> items, int maxStackSize, int slotIndex) {
         int inputSlot = getInputSlot(slotIndex);
         int resultSlot = getResultSlot(slotIndex);
 
@@ -306,7 +308,7 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
             return false;
         }
 
-        ItemStack resultStack = ((AbstractCookingRecipe)recipeHolder.value()).assemble(singleRecipeInput, registryAccess);
+        ItemStack resultStack = ((AbstractCookingRecipe)recipeHolder.value()).assemble(singleRecipeInput);
         if (resultStack.isEmpty()) {
             return false;
         }
@@ -323,13 +325,13 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
         }
     }
 
-    private static boolean burn(RegistryAccess registryAccess, @Nullable RecipeHolder<? extends AbstractCookingRecipe> recipeHolder, SingleRecipeInput singleRecipeInput, NonNullList<ItemStack> items, int maxStackSize, int slotIndex) {
-        if (recipeHolder != null && canBurn(registryAccess, recipeHolder, singleRecipeInput, items, maxStackSize, slotIndex)) {
+    private static boolean burn(@Nullable RecipeHolder<? extends AbstractCookingRecipe> recipeHolder, SingleRecipeInput singleRecipeInput, NonNullList<ItemStack> items, int maxStackSize, int slotIndex) {
+        if (recipeHolder != null && canBurn(recipeHolder, singleRecipeInput, items, maxStackSize, slotIndex)) {
             int inputSlot = getInputSlot(slotIndex);
             int resultSlot = getResultSlot(slotIndex);
 
             ItemStack inputStack = items.get(inputSlot);
-            ItemStack resultStack = ((AbstractCookingRecipe)recipeHolder.value()).assemble(singleRecipeInput, registryAccess);
+            ItemStack resultStack = recipeHolder.value().assemble(singleRecipeInput);
             ItemStack existingResult = items.get(resultSlot);
 
             if (existingResult.isEmpty()) {
@@ -370,6 +372,7 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
         }
     }
 
+    @Override
     public boolean canPlaceItemThroughFace(int slot, ItemStack itemStack, @Nullable Direction direction) {
         return this.canPlaceItem(slot, itemStack);
     }
@@ -433,7 +436,7 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
         }
         else if (slot == SLOT_FUEL) {
             ItemStack fuelStack = this.items.get(SLOT_FUEL);
-            return this.level.fuelValues().isFuel(itemStack) ||
+            return itemStack.getBurnTime(this.recipeType, this.level.fuelValues()) > 0 ||
                     (itemStack.is(Items.BUCKET) && !fuelStack.is(Items.BUCKET));
         }
         else {
@@ -482,7 +485,7 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
     private static void createExperience(ServerLevel serverLevel, Vec3 position, int amount, float experience) {
         int expAmount = Mth.floor((float)amount * experience);
         float remainder = Mth.frac((float)amount * experience);
-        if (remainder != 0.0F && serverLevel.random.nextFloat() < remainder) {
+        if (remainder != 0.0F && serverLevel.getRandom().nextFloat() < remainder) {
             ++expAmount;
         }
 
@@ -497,8 +500,7 @@ public abstract class AbstractAdvancedFurnaceBlockEntity extends BaseContainerBl
 
     public void preRemoveSideEffects(BlockPos blockPos, BlockState blockState) {
         super.preRemoveSideEffects(blockPos, blockState);
-        Level level = this.level;
-        if (level instanceof ServerLevel serverLevel) {
+        if (this.level instanceof ServerLevel serverLevel) {
             this.getRecipesToAwardAndPopExperience(serverLevel, Vec3.atCenterOf(blockPos));
         }
     }
