@@ -2,7 +2,7 @@ package me.andandsf.advancedfurnace;
 
 import java.util.function.Function;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -11,9 +11,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -40,7 +40,7 @@ public class AdvancedFurnace implements ModInitializer {
 
 	static {
 		ADVANCED_FURNACE_BLOCK = register("advanced_furnace", AdvancedFurnaceBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.FURNACE).requiresCorrectToolForDrops());
-		ADVANCED_FURNACE_ITEM = Items.registerBlock(ADVANCED_FURNACE_BLOCK);
+		ADVANCED_FURNACE_ITEM = register("advanced_furnace", settings -> new BlockItem(ADVANCED_FURNACE_BLOCK, settings), new Item.Properties());
 		UPDATE_TOOL_ITEM = register("update_tool", UpdateToolItem::new, new Item.Properties());
 		ADVANCED_FURNACE_BLOCK_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, ADVANCED_FURNACE_ID, FabricBlockEntityTypeBuilder.create(AdvancedFurnaceBlockEntity::new, ADVANCED_FURNACE_BLOCK).build());
 
@@ -56,12 +56,14 @@ public class AdvancedFurnace implements ModInitializer {
 
 	public static Item register(String path, Function<Item.Properties, Item> factory, Item.Properties settings) {
 		final ResourceKey<Item> registryKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(MOD_ID, path));
-		return Items.registerItem(registryKey, factory, settings);
+		var item = factory.apply(settings.setId(registryKey));
+		Registry.register(BuiltInRegistries.ITEM, registryKey, item);
+		return item;
 	}
 
 	@Override
 	public void onInitialize() {
-        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(content -> {
+		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS).register(content -> {
             content.accept(ADVANCED_FURNACE_ITEM);
             content.accept(UPDATE_TOOL_ITEM);
         });
