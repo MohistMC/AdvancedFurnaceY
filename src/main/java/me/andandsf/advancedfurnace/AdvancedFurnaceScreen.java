@@ -20,7 +20,7 @@ public class AdvancedFurnaceScreen extends HandledScreen<ScreenHandler> {
     @Override
     protected void drawBackground(DrawContext matrices, float delta, int mouseX, int mouseY) {
         int x = (width - backgroundWidth) / 2;
-        int y = (height - backgroundHeight) / 2;
+        int y = (height - backgroundHeight) / 2 - 11;
         matrices.drawTexture(TEXTURE,  x, y, 0, 0, backgroundWidth, backgroundHeight+10);
         if (this.handler.isBurning()) {
             int l = this.handler.getFuelProgress();
@@ -45,5 +45,6 @@ public class AdvancedFurnaceScreen extends HandledScreen<ScreenHandler> {
         super.init();
         // Center the title
         titleX = (backgroundWidth - textRenderer.getWidth(title)) / 2;
+        titleY = titleY - 11;
     }
 }
