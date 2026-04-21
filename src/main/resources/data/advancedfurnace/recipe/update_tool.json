@@ -10,7 +10,7 @@
     "a": "minecraft:iron_bars",
     "b": "minecraft:furnace",
     "c": "#minecraft:logs",
-    "d": "minecraft:iron_ingot"
+    "d": "#c:ingots/iron"
   },
   "result": {
     "id": "advancedfurnace:update_tool",

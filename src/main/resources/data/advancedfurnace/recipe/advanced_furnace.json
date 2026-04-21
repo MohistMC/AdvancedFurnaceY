@@ -9,7 +9,7 @@
   "key": {
     "a": "minecraft:furnace",
     "b": "minecraft:iron_bars",
-    "c": "minecraft:iron_ingot"
+    "c": "#c:ingots/iron"
   },
   "result": {
     "id": "advancedfurnace:advanced_furnace",
