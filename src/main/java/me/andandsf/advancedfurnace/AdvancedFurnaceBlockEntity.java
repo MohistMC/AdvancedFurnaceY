@@ -2,7 +2,7 @@ package me.andandsf.advancedfurnace;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
-import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.LockableContainerBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
@@ -16,7 +16,6 @@ import net.minecraft.recipe.AbstractCookingRecipe;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.RecipeType;
 import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.text.Text;
@@ -27,7 +26,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScreenHandlerFactory, Inventory, SidedInventory {
+public class AdvancedFurnaceBlockEntity extends LockableContainerBlockEntity implements SidedInventory {
     private DefaultedList<ItemStack> inventory = DefaultedList.ofSize(10, ItemStack.EMPTY);
     private int burnTime;
     private int fuelTime;
@@ -158,10 +157,14 @@ public class AdvancedFurnaceBlockEntity extends BlockEntity implements NamedScre
         return Text.translatable("block.advancedfurnace.advanced_furnace");
     }
 
-    @Nullable
     @Override
-    public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
-        return new AdvancedFurnaceScreenHandler(syncId, inv, this, propertyDelegate);
+    protected Text getContainerName() {
+        return Text.translatable("block.advancedfurnace.advanced_furnace");
+    }
+
+    @Override
+    public ScreenHandler createScreenHandler(int syncId, PlayerInventory playerInventory) {
+        return new AdvancedFurnaceScreenHandler(syncId, playerInventory, this, propertyDelegate);
     }
 
     @Override

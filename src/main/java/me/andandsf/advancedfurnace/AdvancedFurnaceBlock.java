@@ -11,7 +11,6 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -57,8 +56,8 @@ public class AdvancedFurnaceBlock extends BlockWithEntity {
 
     private void openScreen(World world, BlockPos pos, PlayerEntity player) {
         BlockEntity blockEntity = world.getBlockEntity(pos);
-        if (blockEntity instanceof AdvancedFurnaceBlockEntity) {
-            player.openHandledScreen((NamedScreenHandlerFactory)blockEntity);
+        if (blockEntity instanceof AdvancedFurnaceBlockEntity advancedFurnaceBlockEntity) {
+            player.openHandledScreen(advancedFurnaceBlockEntity);
             player.incrementStat(Stats.INTERACT_WITH_FURNACE);
         }
     }
