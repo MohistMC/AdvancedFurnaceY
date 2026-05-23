@@ -202,11 +202,11 @@ public class AdvancedFurnaceBlockEntity extends LockableContainerBlockEntity imp
         if (be.isBurning()) {
             be.burnTime -= 4;
         }
-        ItemStack updateTool = (ItemStack)be.inventory.get(9);
+        ItemStack updateTool = be.inventory.get(9);
         int cookTimeAdd = updateTool.isEmpty() ? 1 : 2;
         if (!world.isClient) {
-            ItemStack itemStack = (ItemStack)be.inventory.get(0);
-            if (!be.isBurning() && (itemStack.isEmpty() || ((ItemStack)be.inventory.get(0)).isEmpty())) {
+            ItemStack itemStack = be.inventory.get(0);
+            if (!be.isBurning() && (itemStack.isEmpty() || be.inventory.get(0).isEmpty())) {
                 for (int i = 0; i < 4; i++) {
                     if (!be.isBurning() && be.cookTime[i] > 0) {
                         be.cookTime[i] = MathHelper.clamp(be.cookTime[i] - cookTimeAdd, 0, be.cookTimeTotal[i]);
@@ -214,8 +214,17 @@ public class AdvancedFurnaceBlockEntity extends LockableContainerBlockEntity imp
                 }
             } else {
                 for (int i = 0; i < 4; i++) {
+                    // 优化：检查原料槽是否为空，如果为空则跳过此通道
+                    int ingredientSlot = 1 + i * 2;
+                    ItemStack ingredientStack = be.inventory.get(ingredientSlot);
+                    if (ingredientStack.isEmpty()) {
+                        // 原料槽为空，重置该通道的熔炼进度
+                        be.cookTime[i] = 0;
+                        continue; // 跳过后续处理
+                    }
+
                     Inventory tempInventory = new SimpleInventory(3);
-                    tempInventory.setStack(0, be.inventory.get(1+i*2));
+                    tempInventory.setStack(0, ingredientStack);
                     Recipe<?> recipe = world.getRecipeManager().getFirstMatch(RecipeType.SMELTING, tempInventory, world).orElse(null);
 
                     if (!be.isBurning() && be.canAcceptRecipeOutput(world.getRegistryManager(), recipe, i)) {
