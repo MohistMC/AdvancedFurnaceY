@@ -9,8 +9,8 @@
     "andandsf"
   ],
   "contact": {
-    "homepage": "https://github.com/MohistMC/AdvancedFurnaceY/tree/fabric-26.1",
-    "sources": "https://github.com/MohistMC/AdvancedFurnaceY/tree/fabric-26.1"
+    "homepage": "https://github.com/MohistMC/AdvancedFurnaceY/tree/fabric-26.2",
+    "sources": "https://github.com/MohistMC/AdvancedFurnaceY/tree/fabric-26.2"
   },
 
   "license": "MIT",
@@ -29,8 +29,8 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.19.1",
-    "minecraft": "~26.1.2",
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~26.2",
     "java": ">=25",
     "fabric-api": "*"
   },
